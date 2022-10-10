@@ -1,8 +1,9 @@
 package edu.jsu.mcis.cs310;
-
 import java.sql.*;
 import org.json.simple.*;
 import org.json.simple.parser.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Database {
     
@@ -14,7 +15,7 @@ public class Database {
 
     public Database(String username, String password, String address) {
         
-        this.connection = openConnection(username, password, address);
+    this.connection = openConnection(username, password, address);
         
     }
     
@@ -24,7 +25,22 @@ public class Database {
         
         String result = null;
         
-        // INSERT YOUR CODE HERE
+String query = "select * from section where termid=? and  subjectid=? and num=?";
+
+        try {
+
+            PreparedStatement prep_sta = connection.prepareStatement(query);
+            prep_sta.setInt(1, termid);
+            prep_sta.setString(2, subjectid);
+            prep_sta.setString(3, num);
+            prep_sta.execute();
+            ResultSet resultset = prep_sta.getResultSet();
+            result = getResultSetAsJSON(resultset);
+        } catch (SQLException ex) {
+
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
         
         return result;
         
@@ -34,7 +50,20 @@ public class Database {
         
         int result = 0;
         
-        // INSERT YOUR CODE HERE
+        String query = "insert into registration values(?,?,?)";
+
+        try {
+
+            PreparedStatement prep_sta = this.connection.prepareStatement(query);
+            prep_sta.setInt(1, studentid);
+            prep_sta.setInt(2, termid);
+            prep_sta.setInt(3, crn);
+            result = prep_sta.executeUpdate();
+        } catch (SQLException ex) {
+
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
         
         return result;
         
@@ -44,7 +73,25 @@ public class Database {
         
         int result = 0;
         
-        // INSERT YOUR CODE HERE
+ String query = "delete from registration where studentid=? and termid=? and crn=?";
+
+        try {
+
+            PreparedStatement prep_sta = this.connection.prepareStatement(query);
+
+            prep_sta.setInt(1, studentid);
+
+            prep_sta.setInt(2, termid);
+
+            prep_sta.setInt(3, crn);
+
+            result = prep_sta.executeUpdate();
+
+        } catch (SQLException ex) {
+
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
         
         return result;
         
@@ -54,7 +101,23 @@ public class Database {
         
         int result = 0;
         
-        // INSERT YOUR CODE HERE
+   String query = "delete from registration where studentid=? and termid=?";
+
+        try {
+
+            PreparedStatement prep_sta = this.connection.prepareStatement(query);
+
+            prep_sta.setInt(1, studentid);
+
+            prep_sta.setInt(2, termid);
+
+            result = prep_sta.executeUpdate();
+
+        } catch (SQLException ex) {
+
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
         
         return result;
         
@@ -64,7 +127,31 @@ public class Database {
         
         String result = null;
         
-        // INSERT YOUR CODE HERE
+String query = "SELECT r.studentid, r.termid, s.scheduletypeid, s.instructor, s.num, s.start, s.days, s.section, s.end, s.where, s.crn, s.subjectid FROM registration AS r, section AS s, term AS t WHERE r.studentid=? AND r.termid=? AND r.crn=s.crn AND s.termid=t.id";
+
+ 
+
+        PreparedStatement prep_sta;
+
+        try {
+
+            prep_sta = connection.prepareStatement(query);
+
+            prep_sta.setInt(1, termid);
+
+            prep_sta.setInt(2, studentid);
+
+            prep_sta.execute();
+
+            ResultSet resultset = prep_sta.getResultSet();
+
+            result = getResultSetAsJSON(resultset);
+
+        } catch (SQLException ex) {
+
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
         
         return result;
         
@@ -160,7 +247,21 @@ public class Database {
             ResultSetMetaData metadata = resultset.getMetaData();
             int columnCount = metadata.getColumnCount();
             
-            // INSERT YOUR CODE HERE
+while (resultset.next()) {
+
+                JSONObject obj = new JSONObject();
+
+                for (int i = 0; i < columnCount; i++) {
+
+                    obj.put(metadata.getColumnLabel(i + 1).toLowerCase(), resultset.getObject(i + 1).toString());
+
+                }
+
+                json.add(obj);
+
+            }
+
+        
         
         }
         catch (Exception e) { e.printStackTrace(); }
